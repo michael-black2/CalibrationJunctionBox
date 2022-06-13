@@ -18,7 +18,7 @@ example:
 @reboot sudo /home/pi/Documents/Junction_Box/launcher.sh >> /home/pi/Documents/Junction_Box/log.txt 2>&1
 
 
-SPI needs to be enabled on the device by goign to the system config and the latest updates need to be installed
+SPI and I2C need to be enabled on the device by goign to the system config and the latest updates need to be installed
 https://www.takaitra.com/spi-device-raspberry-pi/
 The above link gives steps in doing this
 
