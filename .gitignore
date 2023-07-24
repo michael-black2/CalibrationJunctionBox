@@ -1,0 +1,17 @@
+﻿################################################################################
+# This .gitignore file was automatically created by Microsoft(R) Visual Studio.
+################################################################################
+
+/.vs/bacnetGateway/v17/
+.vs/bacnetGateway/v17/
+/.vs/bacnetGateway/v17/*
+*.pyc
+*.vsidx
+*.wsuo
+*.sqlite
+/Apps/Library/__pycache__
+/Apps/__pycache__
+/.vs
+*.log
+/Logs
+*.db

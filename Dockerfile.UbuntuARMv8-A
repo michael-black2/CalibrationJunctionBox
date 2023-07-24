@@ -1,0 +1,53 @@
+# syntax=docker/dockerfile:1
+
+#FROM <image>[:<tag>@<digest>]
+#FROM ubuntu:mantic-20230624@sha256:15ab070a0555d8274bb60513b343130b956ff0fed9288e5b7f3071c5ef434691
+FROM python:3.9.17-slim-bullseye@sha256:65a27789e3fcd05203098f59bc09fdee2760337a0f0d48ca8770498d1042c070
+LABEL Michael Black <Michael.Black@sensoscientific.com>
+
+USER 0
+ARG DEST_PATH="/opt/BACnetGateway"
+RUN apt-get update
+RUN apt-get install -y cron net-tools wget python3-requests python3-netifaces sqlite3 procps
+RUN python3 -m pip install -r gpiozero spidev smbus2 requests -t usr/lib/python3/dist-packages
+
+RUN mkdir -p ${DEST_PATH} \
+    && mkdir -p ${DEST_PATH}/Apps \
+    && mkdir -p ${DEST_PATH}/Apps/Library \
+    && mkdir -p ${DEST_PATH}/ShellScripts \
+    && mkdir -p /var/log/Calibration \ 
+    && mkdir -p /var/log/BACnetGateway/old
+
+# install app
+COPY ./Apps/Senso_BACnetApp.py ${DEST_PATH}/Apps
+COPY ./Apps/BACpypes.ini ${DEST_PATH}/Apps
+COPY ./Apps/Senso_CloudAPIApp.py ${DEST_PATH}/Apps
+COPY ./Apps/SensoCloudLogin.ini ${DEST_PATH}/Apps
+
+# install library
+COPY ./Apps/Library/Senso_CloudAPI.py ${DEST_PATH}/Apps/Library
+COPY ./Apps/Library/Senso_DataTypes.py ${DEST_PATH}/Apps/Library
+COPY ./Apps/Library/Senso_SQLiteDB.py ${DEST_PATH}/Apps/Library
+COPY ./Apps/Library/Dashboard.py ${DEST_PATH}/Apps/Library
+
+# install scripts
+COPY ./Ubuntu/Container/Senso_CloudAPIApp.sh ${DEST_PATH}/ShellScripts
+COPY ./Ubuntu/Container/Senso_BACnetApp.sh ${DEST_PATH}/ShellScripts
+COPY ./Ubuntu/Container/Senso_KillAll.sh ${DEST_PATH}/ShellScripts
+RUN chmod 0744 ${DEST_PATH}/ShellScripts/Senso_CloudAPIApp.sh
+RUN chmod 0744 ${DEST_PATH}/ShellScripts/Senso_BACnetApp.sh
+RUN chmod 0744 ${DEST_PATH}/ShellScripts/Senso_KillAll.sh
+COPY ./Ubuntu/Container/logrotate/logrotate.conf /etc/logrotate.conf
+COPY ./Ubuntu/Container/logrotate/BACnet /etc/logrotate.d/BACnet
+
+# ping
+RUN apt-get update && apt-get install -y iputils-ping
+
+# cron
+COPY ./Ubuntu/Container/crontab-container etc/cron.d/BACnet-cron
+RUN chmod 0644 /etc/cron.d/BACnet-cron && crontab /etc/cron.d/BACnet-cron
+RUN crontab /etc/cron.d/BACnet-cron
+RUN touch var/log/cron.log
+EXPOSE 443/tcp
+EXPOSE 47808/udp
+CMD cron && tail -f var/log/cron.log

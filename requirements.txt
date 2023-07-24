@@ -1,0 +1,4 @@
+spidev
+gpiozero
+smbus2
+requests

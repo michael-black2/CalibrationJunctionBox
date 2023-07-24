@@ -1,0 +1,8 @@
+/var/log/BACnetGateway/* {
+    notifyempty
+    oldir /var/log/BACnetGateway/old
+    missingok
+    weekly
+    copytruncate
+    rotate 7
+}
